@@ -1,0 +1,64 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager NavigationManager
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">CulinaryCommand</a>
+        <button class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass nav-scrollable sidebar">
+    <nav class="flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">
+                <i class="oi oi-home" aria-hidden="true"></i> Home
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/prep-list" Match="NavLinkMatch.Prefix">
+                <i class="fas fa-clipboard-list"></i> Prep List
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/order-list" Match="NavLinkMatch.Prefix">
+                <i class="fas fa-shopping-basket"></i> Order List
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/staff" Match="NavLinkMatch.Prefix">
+                <i class="fas fa-users"></i> Staff Management
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/reports" Match="NavLinkMatch.Prefix">
+                <i class="fas fa-chart-line"></i> Reports
+            </NavLink>
+        </div>
+    </nav>
+
+    <div class="mt-auto p-3">
+        <AuthorizeView>
+            <Authorized>
+                <a class="nav-link flex items-center space-x-2" href="Identity/Account/Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </Authorized>
+            <NotAuthorized>
+                <a class="nav-link flex items-center space-x-2" href="Identity/Account/Login">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Login</span>
+                </a>
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
+</div>
+
+@code {
+    private bool collapseNavMenu = false;
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse sidebar" : "sidebar";
+    private void ToggleNavMenu() => collapseNavMenu = !collapseNavMenu;
+}

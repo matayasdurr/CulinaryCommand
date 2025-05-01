@@ -1,0 +1,109 @@
+@page "/order-list"
+@using CulinaryCommand.Models
+@using CulinaryCommand.Services
+@inject IOrderService OrderSvc
+@inject IJSRuntime Js
+
+<h2 class="text-2xl font-semibold mb-4">Items to Order</h2>
+
+<button class="mb-4 bg-indigo-600 text-white px-4 py-2 rounded" @onclick="OpenNewModal">
+  <i class="fas fa-plus mr-2"></i> New Order
+</button>
+
+<NewOrderItemModal
+    Visible="@showModal"
+    Item="@editingOrder"
+    OnCancel="CloseModal"
+    OnSave="HandleSave"
+/>
+
+<div class="bg-white rounded-lg shadow overflow-hidden">
+  <table class="min-w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Ordered</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Level</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+      </tr>
+    </thead>
+    <tbody class="bg-white divide-y divide-gray-200">
+      @foreach (var order in orders)
+      {
+        <tr>
+          <td class="px-6 py-4">@order.Name</td>
+          <td class="px-6 py-4">@order.LastOrdered.ToString("MM/dd/yyyy")</td>
+          <td class="px-6 py-4">@order.Level</td>
+          <td class="px-6 py-4 space-x-2">
+            <button class="text-indigo-600 hover:text-indigo-900"
+                    @onclick="() => BeginEdit(order)">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="text-red-600 hover:text-red-900"
+                    @onclick="() => ConfirmDelete(order.Id, order.Name)">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+@code {
+  private List<OrderItem> orders = new();
+  private bool showModal;
+  private OrderItem editingOrder = new();
+
+  protected override async Task OnInitializedAsync() => await Load();
+
+  async Task Load() => orders = await OrderSvc.GetAllAsync();
+
+  void OpenNewModal()
+{
+    editingOrder = new OrderItem
+    {
+        LastOrdered = DateTime.Today
+    };
+    showModal = true;
+}
+
+
+  void BeginEdit(OrderItem o)
+{
+    editingOrder = new OrderItem {
+      Id          = o.Id,
+      Name        = o.Name,
+      LastOrdered = o.LastOrdered == default ? DateTime.Today : o.LastOrdered,
+      Level       = o.Level
+    };
+    showModal = true;
+}
+
+
+  void CloseModal()
+  {
+    editingOrder = new();
+    showModal = false;
+  }
+
+  async Task HandleSave(OrderItem o)
+  {
+    if (o.Id == 0)
+      await OrderSvc.AddAsync(o);
+    else
+      await OrderSvc.UpdateAsync(o);
+
+    await Load();
+    CloseModal();
+  }
+
+  async Task ConfirmDelete(int id, string name)
+  {
+    if (await Js.InvokeAsync<bool>("confirm", $"Delete “{name}”?"))
+    {
+      await OrderSvc.DeleteAsync(id);
+      await Load();
+    }
+  }
+}

@@ -1,0 +1,70 @@
+@using CulinaryCommand.Models
+<EditForm Model="Item" OnValidSubmit="HandleValidSubmit">
+  <DataAnnotationsValidator />
+  <ValidationSummary />
+
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 @(Visible ? "" : "hidden")">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md fade-in p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold">Add/Edit Prep Item</h3>
+        <button type="button" @onclick="Cancel" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="mb-4">
+        <label class="block mb-1">Item Name</label>
+        <InputText class="w-full border rounded px-3 py-2" @bind-Value="Item.Name" />
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 mb-4">
+        <div>
+          <label class="block mb-1">Category</label>
+          <InputText class="w-full border rounded px-3 py-2" @bind-Value="Item.Category" />
+        </div>
+        <div>
+          <label class="block mb-1">Par Level</label>
+          <InputNumber class="w-full border rounded px-3 py-2" @bind-Value="Item.Par" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 mb-4">
+        <div>
+          <label class="block mb-1">Current Count</label>
+          <InputNumber class="w-full border rounded px-3 py-2" @bind-Value="Item.Count" />
+        </div>
+        <div>
+          <label class="block mb-1">Prep Amount</label>
+          <InputNumber class="w-full border rounded px-3 py-2" @bind-Value="Item.Prep" />
+        </div>
+      </div>
+
+      <div class="mb-6">
+        <label class="block mb-1">Assigned To</label>
+        <InputText class="w-full border rounded px-3 py-2" @bind-Value="Item.AssignedTo" />
+      </div>
+
+      <div class="flex justify-end space-x-3">
+        <button type="button" class="px-4 py-2 border rounded" @onclick="Cancel">Cancel</button>
+        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded">Save</button>
+      </div>
+    </div>
+  </div>
+</EditForm>
+
+@code {
+  [Parameter] public bool Visible { get; set; }
+  [Parameter] public PrepItem Item { get; set; } = new();
+  [Parameter] public EventCallback OnCancel { get; set; }
+  [Parameter] public EventCallback<PrepItem> OnSave { get; set; }
+
+  private async Task HandleValidSubmit()
+  {
+    await OnSave.InvokeAsync(Item);
+  }
+
+  private async Task Cancel()
+  {
+    await OnCancel.InvokeAsync();
+  }
+}

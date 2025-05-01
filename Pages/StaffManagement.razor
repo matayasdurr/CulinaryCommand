@@ -1,0 +1,103 @@
+@page "/staff"
+@using CulinaryCommand.Models
+@using CulinaryCommand.Services
+@inject IEmployeeService EmpSvc
+@inject IJSRuntime Js
+
+<h2 class="text-2xl font-semibold mb-4">Staff Management</h2>
+
+<button class="bg-indigo-600 text-white px-4 py-2 rounded mb-4" @onclick="OpenNewModal">
+  <i class="fas fa-plus mr-2"></i> Add Employee
+</button>
+
+<NewEmployeeModal 
+    Visible="@showModal" 
+    Item="@editingEmp" 
+    OnCancel="CloseModal" 
+    OnSave="HandleSaveEmp" />
+
+<table class="min-w-full bg-white rounded-lg shadow overflow-hidden">
+  <thead class="bg-gray-50">
+    <tr>
+      <th class="px-6 py-3">Name</th>
+      <th class="px-6 py-3">Role</th>
+      <th class="px-6 py-3">Email</th>
+      <th class="px-6 py-3">Active</th>
+      <th class="px-6 py-3">Actions</th>
+    </tr>
+  </thead>
+  <tbody class="divide-y divide-gray-200">
+    @foreach(var e in employees)
+    {
+      <tr>
+        <td class="px-6 py-4">@e.Name</td>
+        <td class="px-6 py-4">@e.Role</td>
+        <td class="px-6 py-4">@e.Email</td>
+        <td class="px-6 py-4">@((e.IsActive) ? "Yes" : "No")</td>
+        <td class="px-6 py-4 space-x-2">
+          <button class="text-indigo-600 hover:text-indigo-900" @onclick="() => BeginEdit(e)">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="text-red-600 hover:text-red-900" @onclick="() => ConfirmDelete(e.Id, e.Name)">
+            <i class="fas fa-trash"></i>
+          </button>
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>
+
+@code {
+  private List<Employee> employees = new();
+  private bool showModal;
+  private Employee editingEmp = new();
+
+  protected override async Task OnInitializedAsync()
+  {
+    employees = await EmpSvc.GetAllAsync();
+  }
+
+  private void OpenNewModal()
+  {
+    editingEmp = new Employee { IsActive = true };
+    showModal = true;
+  }
+
+  private void BeginEdit(Employee e)
+  {
+    editingEmp = new Employee {
+      Id       = e.Id,
+      Name     = e.Name,
+      Role     = e.Role,
+      Email    = e.Email,
+      IsActive = e.IsActive
+    };
+    showModal = true;
+  }
+
+  private void CloseModal()
+  {
+    showModal = false;
+    editingEmp = new Employee();
+  }
+
+  private async Task HandleSaveEmp(Employee emp)
+  {
+    if (emp.Id == 0)
+      await EmpSvc.AddAsync(emp);
+    else
+      await EmpSvc.UpdateAsync(emp);
+
+    employees = await EmpSvc.GetAllAsync();
+    CloseModal();
+  }
+
+  private async Task ConfirmDelete(int id, string name)
+  {
+    if (await Js.InvokeAsync<bool>("confirm", $"Delete “{name}”?"))
+    {
+      await EmpSvc.DeleteAsync(id);
+      employees = await EmpSvc.GetAllAsync();
+    }
+  }
+}
